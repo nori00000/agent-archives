@@ -35,3 +35,4 @@ DerivedData/
 *.xcuserstate
 xcuserdata/
 native/AgentArchives/build/
+.omc/
