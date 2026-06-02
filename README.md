@@ -1,7 +1,9 @@
 # Agent Archives
 
-> **한눈에 / At a glance**  
-> Forked desktop app for browsing Claude Code and OpenCode session history.  
+> **한눈에 / At a glance**
+>
+> Forked desktop app for browsing Claude Code and OpenCode session history.
+>
 > 자세한 한영 프로젝트 설명, 검색 키워드, 저작권 범위: [PROJECT.md](./PROJECT.md) · [NOTICE.md](./NOTICE.md)
 
 
