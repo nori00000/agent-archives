@@ -9,6 +9,7 @@ Updated: 2025-12-15 - Resume path fix: migrate sessions instead of mapping paths
 
 import json
 import os
+import tempfile
 import unicodedata
 from pathlib import Path
 from datetime import datetime
@@ -40,6 +41,24 @@ def get_folder_cwd(project_folder):
             return cwd
     return None
 
+def save_index(index_path, sessions, history_entries, unmatched_entries, items):
+    """Write the index atomically so the viewer never reads a partial file."""
+    index_path.parent.mkdir(parents=True, exist_ok=True)
+    index = {
+        'generatedAt': datetime.now().isoformat(),
+        'totalSessions': len(sessions),
+        'totalHistoryEntries': len(history_entries),
+        'unmatchedHistoryEntries': len(unmatched_entries),
+        'items': items
+    }
+    with tempfile.NamedTemporaryFile(
+        mode='w', encoding='utf-8', dir=index_path.parent,
+        prefix=f'.{index_path.name}.', suffix='.tmp', delete=False
+    ) as f:
+        json.dump(index, f, ensure_ascii=False, indent=2)
+        temp_path = Path(f.name)
+    os.replace(temp_path, index_path)
+
 def main():
     claude_dir = Path(os.path.expanduser('~/.claude'))
     history_dir = claude_dir / 'claude-history'
@@ -48,7 +67,9 @@ def main():
     names_file = history_dir / 'session-names.json'
 
     if not projects_dir.exists():
-        print("Error: Projects directory not found")
+        index_path = history_dir / 'sessions-index.json'
+        save_index(index_path, [], [], [], [])
+        print("Projects directory not found; wrote an empty session index")
         return
 
     # Load custom session names
@@ -270,14 +291,7 @@ def main():
 
     # ===== 5. Save index =====
     index_path = history_dir / 'sessions-index.json'
-    with open(index_path, 'w', encoding='utf-8') as f:
-        json.dump({
-            'generatedAt': datetime.now().isoformat(),
-            'totalSessions': len(sessions),
-            'totalHistoryEntries': len(history_entries),
-            'unmatchedHistoryEntries': len(unmatched_entries),
-            'items': all_items
-        }, f, ensure_ascii=False, indent=2)
+    save_index(index_path, sessions, history_entries, unmatched_entries, all_items)
 
     print(f"\nDone!")
     print(f"  Sessions: {len(sessions)}")
